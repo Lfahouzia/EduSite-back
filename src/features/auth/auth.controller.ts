@@ -53,7 +53,7 @@ export class AuthController {
       });
     }
     const user = await service.getUser(req.params.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    if (!user) return res.status(HTTP_STATUS.NOT_FOUND).json({ error: "User not found" });
     res.json(user);
   }
 
