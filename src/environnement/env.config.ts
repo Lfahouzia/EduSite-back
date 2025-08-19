@@ -27,6 +27,7 @@ if (!process.env.JWT_SECRET) {
 
 export const config = {
   port: parseInt(process.env.PORT as string, 10),
+  jwtSecret: process.env.JWT_SECRET,
   db: {
     user: process.env.DB_USER as string,
     password: process.env.DB_PASSWORD as string,

@@ -1,3 +1,5 @@
+import db from "../shared/lib/db.client";
+
 const up = async () => {
   const extension = `
         CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -5,28 +7,26 @@ const up = async () => {
   // Create a users table if it doesn't exist
   const users = `
         CREATE TABLE IF NOT EXISTS users (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+          first_name VARCHAR(50) UNIQUE NOT NULL,
+          last_name VARCHAR(80) NOT NULL,
+          status BOOLEAN DEFAULT TRUE,
           email VARCHAR(255) UNIQUE NOT NULL,
           password VARCHAR(255) NOT NULL,
-          last_name VARCHAR(30),
-          first_name VARCHAR(50),
-          is_email_verified BOOLEAN DEFAULT FALSE,
-          phone VARCHAR(20),
+          cover_letter TEXT,
+          cv VARCHAR(255),
           picture VARCHAR(255),
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          role_id UUID REFERENCES roles(id) ON DELETE SET NULL
-
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
       );
     `;
-
 
   const roles = `
         CREATE TABLE IF NOT EXISTS roles (
           id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
           name VARCHAR(50) UNIQUE NOT NULL,
           description TEXT,
-          is_active BOOLEAN DEFAULT TRUE,
+          status BOOLEAN DEFAULT TRUE,
           created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
       );
@@ -36,10 +36,10 @@ const up = async () => {
         CREATE TABLE IF NOT EXISTS permissions (
           id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
           name VARCHAR(100) UNIQUE NOT NULL,
+          description TEXT,
           created_at TIMESTAMP DEFAULT NOW()
       );
     `;
-
 
   const rolesPermissions = `
         CREATE TABLE IF NOT EXISTS role_permission (
@@ -49,4 +49,24 @@ const up = async () => {
       );
     `;
 
-}
+  const usersRoles = `
+        CREATE TABLE IF NOT EXISTS user_role (
+          role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
+          user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+          PRIMARY KEY (role_id, user_id)
+      );
+    `;
+  //Time execution
+  console.time("Creating tables...");
+
+  await db.query(extension);
+  await db.query(roles);
+  await db.query(users);
+  await db.query(permissions);
+  await db.query(rolesPermissions);
+  await db.query(usersRoles);
+
+  console.timeEnd("Ending creating tables...");
+};
+
+export default up;
