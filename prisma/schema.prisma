@@ -1,0 +1,251 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+
+// ---------------------------------------------
+// ENUMS
+// ---------------------------------------------
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  ACCEPTED
+}
+
+enum MediaType {
+  VIDEO
+  AUDIO
+  PDF
+  TEXT
+}
+
+// ---------------------------------------------
+// MODELS
+// ---------------------------------------------
+
+model User {
+  id            String         @id @default(cuid())
+  firstname     String
+  lastname      String
+  email         String         @unique
+  password      String
+  photo         String?
+  cv            String?
+  coverLetter   String?
+  status        UserStatus
+
+  // Relations
+  roles         Role[]         @relation("UserRoles")
+  socialAccounts SocialAccount[]
+  // messagesSent  Message[]      @relation("MessagesSent")
+  // messagesRecv  Message[]      @relation("MessagesRecv")
+  // groupMessages GroupMessage[]
+  enrollments   Enrollment[]
+  coursesTutor  Course[]       @relation("TutorCourses")
+  coursesStudent Course[]      @relation("StudentCourses")
+  notes         Note[]
+  attempts      QuizAttempt[]
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+
+  // Relations
+  users       User[]       @relation("UserRoles")
+  permissions Permission[] @relation("RolePermissions")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+
+  // Relations
+  roles       Role[]   @relation("RolePermissions")
+}
+
+model SocialAccount {
+  id     String  @id @default(cuid())
+  link   String
+
+  // Relations
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+
+  networkId String
+  network   Network @relation(fields: [networkId], references: [id])
+}
+
+model Network {
+  id    String           @id @default(cuid())
+  name  String
+  accounts SocialAccount[]   //linkedIn - Twitter - Facebook - GitHub ...
+}
+
+// model Message {
+//   id       String  @id @default(cuid())
+//   content  String
+//   sentDate DateTime
+
+//   // Relations
+//   senderId   String
+//   sender     User   @relation("MessagesSent", fields: [senderId], references: [id])
+
+//   receiverId String
+//   receiver   User   @relation("MessagesRecv", fields: [receiverId], references: [id])
+
+//   groupMessage GroupMessage?
+// }
+
+// model GroupMessage {
+//   id     String  @id @default(cuid())
+//   topic  String
+
+//   // Relations
+//   messages Message[]
+//   users    User[]
+// }
+
+model Enrollment {
+  id             String  @id @default(cuid())
+  enrollmentDate DateTime
+  averageScore   Float?
+  feedback       String?
+  isCompleted    Boolean
+
+  // Relations
+  userId   String
+  user     User   @relation(fields: [userId], references: [id])
+
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
+}
+
+model Course {
+  id               String  @id @default(cuid())
+  title            String
+  description      String
+  price            Float
+  status           String
+  publicationDate  DateTime
+  certificateTemplate String?
+
+  // Relations
+  sections   Section[]
+  lessons    Lesson[]
+  quizzes    Quizz[]   @relation("RelatedCourse")
+  enrollments Enrollment[]
+  tutorId     String?
+  tutor       User?    @relation("TutorCourses", fields: [tutorId], references: [id])
+  students   User[]   @relation("StudentCourses")
+}
+
+model Section {
+  id    String  @id @default(cuid())
+  title String
+  order Int //sa position dans le cours
+
+  // Relations
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
+  lessons  Lesson[]
+  quizzes  Quizz[] @relation("RelatedSection")
+}
+
+model Lesson {
+  id        String  @id @default(cuid())
+  title     String
+  content   String
+  mediaType MediaType
+  mediaUrl  String
+  order     Int // sa position dans la section ou dans le cours
+
+  // Relations
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id])
+  sectionId String
+  section   Section @relation(fields: [sectionId], references: [id])
+  quizzes   Quizz[] @relation("RelatedLesson")
+}
+
+model Quizz {
+  id          String  @id @default(cuid())
+  title       String
+  coefficient Float
+
+  // Relations (au choix : course, section ou lesson)
+  relatedCourseId String? 
+  relatedCourse   Course? @relation("RelatedCourse", fields: [relatedCourseId], references: [id])
+
+  relatedSectionId String?
+  relatedSection   Section? @relation("RelatedSection", fields: [relatedSectionId], references: [id])
+
+  relatedLessonId String?
+  relatedLesson   Lesson?  @relation("RelatedLesson", fields: [relatedLessonId], references: [id])
+
+  questions   Question[]
+  attempts    QuizAttempt[] //tentatives
+  notes       Note[]
+}
+
+model QuizAttempt {
+  id          String  @id @default(cuid())
+  attemptDate DateTime
+  score       Float
+  answers     String
+
+  // Relations
+  quizzId String
+  quizz   Quizz @relation(fields: [quizzId], references: [id])
+  userId  String
+  user    User @relation(fields: [userId], references: [id])
+}
+
+model Note {
+  id     String  @id @default(cuid())
+  value  Float
+
+  // Relations
+  quizzId String
+  quizz   Quizz @relation(fields: [quizzId], references: [id])
+  userId  String
+  user    User @relation(fields: [userId], references: [id])
+}
+
+model Question {
+  id                  String  @id @default(cuid())
+  label               String
+  type                String
+  autoCorrectionEnabled Boolean
+
+  // Relations
+  quizzId String
+  quizz   Quizz @relation(fields: [quizzId], references: [id])
+  options Option[]
+}
+
+model Option {
+  id        String  @id @default(cuid())
+  text      String
+  isCorrect Boolean
+
+  // Relations
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+}
