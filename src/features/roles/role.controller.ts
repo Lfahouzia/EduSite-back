@@ -1,11 +1,23 @@
 import { Request, Response } from "express";
 import { RoleServiceProxy } from "./role.service";
 import { HTTP_STATUS } from "../../shared/config/httpStatus";
+import { getMissingFields } from "../../shared/utils/validators";
 
 const service = new RoleServiceProxy();
 
 export class RoleController {
   async create(req: Request, res: Response) {
+
+    const data = req.body;
+    const requiredFields = ["name", "description"];
+    const missingFields = getMissingFields(data, requiredFields);
+    
+    if (missingFields.length > 0) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        error: "Missing required fields",
+      });
+    }
+
     try {
       const role = await service.create(req.body);
       res.status(HTTP_STATUS.CREATED).json(role);

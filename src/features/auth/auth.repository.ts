@@ -36,9 +36,35 @@ export class AuthRepository {
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    const result = await pool.query("SELECT * FROM users WHERE email = $1;", [
-      email,
-    ]);
+    const result = await pool.query(
+      `
+      SELECT 
+        u.*,
+        json_agg(DISTINCT jsonb_build_object(
+          'id', r.id,
+          'name', r.name,
+          'description', r.description,
+          'permissions', rp.perms
+        )) FILTER (WHERE r.id IS NOT NULL) AS roles
+      FROM users u
+      LEFT JOIN user_role ur ON ur.user_id = u.id
+      LEFT JOIN roles r ON r.id = ur.role_id
+      LEFT JOIN (
+        SELECT rp.role_id, json_agg(jsonb_build_object(
+          'id', p.id,
+          'name', p.name,
+          'description', p.description
+        )) AS perms
+        FROM role_permission rp
+        JOIN permissions p ON p.id = rp.permission_id
+        GROUP BY rp.role_id
+      ) rp ON rp.role_id = r.id
+      WHERE u.email = $1
+      GROUP BY u.id;
+      `,
+      [email]
+    );
+
     return result.rows[0] || null;
   }
 

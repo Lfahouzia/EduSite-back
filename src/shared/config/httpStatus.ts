@@ -8,3 +8,14 @@ export const HTTP_STATUS = {
   CONFLICT: 409,
   INTERNAL_ERROR: 500,
 };
+
+export const RESPONSE_MESSAGES = {
+  UNAUTHORIZED: "Unauthorized access",
+  FORBIDDEN: "Forbidden access",
+  NOT_FOUND: "Resource not found",
+  INTERNAL_ERROR: "Internal server error",
+  BAD_REQUEST: "Bad request",
+  CONFLICT: "Conflict detected",
+  OK: "Request successful",
+  CREATED: "Resource created successfully",
+};

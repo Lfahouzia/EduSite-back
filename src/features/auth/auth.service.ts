@@ -44,7 +44,21 @@ export class AuthService {
       throw new Error("Invalid credentials");
     }
 
-    const token = jwt.sign({ id: user.id, roles: {} }, config.jwtSecret, {
+    // Préparer roles + permissions pour le token
+    const roles =
+      user.roles?.map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        permissions: r.permissions || [],
+      })) || [];
+
+    const payload = {
+      id: user.id,
+      roles,
+    };
+
+    const token = jwt.sign(payload, config.jwtSecret, {
       expiresIn: "7d",
     });
 
