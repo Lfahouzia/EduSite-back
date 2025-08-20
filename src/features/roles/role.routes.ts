@@ -37,13 +37,13 @@ router.delete(
 
 // 🔹 Permissions (bulk)
 router.post(
-  "/permissions/bulk/assign",
+  "/permissions/assign",
   authMiddleware,
   adminMiddleware,
   controller.assignPermissionsBulk.bind(controller)
 );
 router.post(
-  "/permissions/bulk/revoke",
+  "/permissions/revoke",
   authMiddleware,
   adminMiddleware,
   controller.revokePermissionsBulk.bind(controller)
@@ -51,13 +51,13 @@ router.post(
 
 // 🔹 Roles <-> Users (bulk)
 router.post(
-  "/users/bulk/assign",
+  "/users/assign",
   authMiddleware,
   adminMiddleware,
   controller.assignRolesToUserBulk.bind(controller)
 );
 router.post(
-  "/users/bulk/revoke",
+  "/users/roles/revoke",
   authMiddleware,
   adminMiddleware,
   controller.revokeRolesFromUserBulk.bind(controller)

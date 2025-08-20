@@ -66,11 +66,11 @@ export class RoleController {
   // 🔹 Roles <-> Users
   // -------------------------
   async assignRolesToUserBulk(req: Request, res: Response) {
-    const { userId, roleIds } = req.body; // JSON { userId, roleIds: [] }
-    await service.assignRolesToUser(userId, roleIds);
+    const { user_id, roles } = req.body; // JSON { userId, roleIds: [] }
+    await service.assignRolesToUser(user_id, roles);
     res.json({
       message: "Roles assigned to user in bulk",
-      count: roleIds.length,
+      count: roles.length,
     });
   }
 
