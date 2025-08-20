@@ -22,10 +22,10 @@ export function authMiddleware(
   }
   const token = authHeader.split(" ")[1];
 
-  console.log("token", token);
+
   try {
     const decoded: any = jwt.verify(token, JWT_SECRET);
-     console.log(decoded);
+
     req.user = {
       roles: decoded.roles,
       id: decoded.id,

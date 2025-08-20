@@ -33,16 +33,33 @@ export class PermissionRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await pool.query("DELETE FROM permissions WHERE id=$1;", [
+    // Vérifier si la permission est utilisée dans role_permission
+    const check = await pool.query(
+      "SELECT 1 FROM role_permission WHERE permission_id = $1 LIMIT 1;",
+      [id]
+    );
+
+    if (check.rowCount === null) {
+      return false; // La permission n'existe pas
+    }
+
+    if (check.rowCount > 0) {
+      // La permission est assignée, on ne peut pas la supprimer
+      return false;
+    }
+
+    // Sinon, supprimer la permission
+    const result = await pool.query("DELETE FROM permissions WHERE id = $1;", [
       id,
     ]);
+
     return result.rowCount !== null && result.rowCount > 0;
   }
-    async findById(id: string): Promise<Permission | null> {
-        const result = await pool.query("SELECT * FROM permissions WHERE id=$1;", [
-        id,
-        ]);
-        return result.rows[0] || null;
-    }
-    
+
+  async findById(id: string): Promise<Permission | null> {
+    const result = await pool.query("SELECT * FROM permissions WHERE id=$1;", [
+      id,
+    ]);
+    return result.rows[0] || null;
+  }
 }

@@ -18,7 +18,7 @@ app.get("/health", (req: Request, res: Response) => {
 
 // Importing routes
 app.use("/api", authRoutes);
-app.use("/api/roles", roleRoutes);
+app.use("/api", roleRoutes);
 app.use("/api/permissions", permissionRoutes);
 
 export default app;

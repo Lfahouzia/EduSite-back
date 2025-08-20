@@ -8,28 +8,28 @@ const controller = new RoleController();
 
 // 🔹 CRUD roles
 router.post(
-  "/",
+  "/roles/",
   authMiddleware,
   adminMiddleware,
   controller.create.bind(controller)
 );
 
 router.get(
-  "/",
+  "/roles/",
   authMiddleware,
   adminMiddleware,
   controller.findAll.bind(controller)
 );
 
 router.put(
-  "/:id",
+  "/roles/:id",
   authMiddleware,
   adminMiddleware,
   controller.update.bind(controller)
 );
 
 router.delete(
-  "/:id",
+  "/roles/:id",
   authMiddleware,
   adminMiddleware,
   controller.delete.bind(controller)
@@ -37,13 +37,13 @@ router.delete(
 
 // 🔹 Permissions (bulk)
 router.post(
-  "/permissions/assign",
+  "/roles/permissions/assign",
   authMiddleware,
   adminMiddleware,
   controller.assignPermissionsBulk.bind(controller)
 );
 router.post(
-  "/permissions/revoke",
+  "/roles/permissions/revoke",
   authMiddleware,
   adminMiddleware,
   controller.revokePermissionsBulk.bind(controller)
@@ -51,7 +51,7 @@ router.post(
 
 // 🔹 Roles <-> Users (bulk)
 router.post(
-  "/users/assign",
+  "/users/roles/assign",
   authMiddleware,
   adminMiddleware,
   controller.assignRolesToUserBulk.bind(controller)

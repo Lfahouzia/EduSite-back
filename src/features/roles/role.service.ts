@@ -59,11 +59,23 @@ export class RoleServiceProxy {
   }
 
   async revokePermissions(roleId: string, permissionIds: string[]) {
-    return this.service.revokePermissions(roleId, permissionIds);
+    return this.service
+      .revokePermissions(roleId, permissionIds)
+      .catch((err) => {
+        if (err.message.includes("foreign key constraint")) {
+          throw new Error("Cannot revoke permissions that are in use by roles");
+        }
+      });;
   }
 
   async assignRolesToUser(userId: string, roleIds: string[]) {
-    return this.service.assignRolesToUser(userId, roleIds);
+    try {
+      
+      return this.service.assignRolesToUser(userId, roleIds);
+    } catch (error:any) {
+      throw new Error("Error assigning roles to user: " + error.message);
+      
+    }
   }
 
   async revokeRolesFromUser(userId: string, roleIds: string[]) {
@@ -75,10 +87,23 @@ export class RoleServiceProxy {
   }
 
   async update(id: string, data: UpdateRoleDTO) {
-    return this.service.update(id, data);
+
+    try {
+      
+      return this.service.update(id, data);
+    } catch (error:any) {
+      throw new Error("Error updating role: " + error.message);
+      
+    }
   }
 
   async delete(id: string) {
-    return this.service.delete(id);
+    try {
+      return this.service.delete(id);
+      
+    } catch (error: any) {
+      throw new Error("Error deleting role: " + error.message);
+      
+    }
   }
 }

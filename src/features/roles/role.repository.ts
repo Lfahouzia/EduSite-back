@@ -36,8 +36,39 @@ export class RoleRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await pool.query("DELETE FROM roles WHERE id=$1;", [id]);
-    return (result.rowCount ?? 0) > 0;
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      // Vérifier si le rôle est assigné à un utilisateur
+      const check = await client.query(
+        "SELECT 1 FROM user_role WHERE role_id = $1 LIMIT 1;",
+        [id]
+      );
+
+      if( check.rowCount === null) {
+        return false; // Le rôle n'existe pas
+      }
+
+      if (check.rowCount > 0) {
+        // Annuler la transaction si le rôle est utilisé
+        await client.query("ROLLBACK");
+        return false;
+      }
+
+      // Supprimer le rôle
+      const result = await client.query("DELETE FROM roles WHERE id=$1;", [id]);
+
+      await client.query("COMMIT");
+
+      return (result.rowCount ?? 0) > 0;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   /**
@@ -53,6 +84,10 @@ export class RoleRepository {
         return `($1, $${idx + 2})`;
       })
       .join(", ");
+
+
+      console.log(values, placeholders);
+      
 
     const query = `
       INSERT INTO role_permission (role_id, permission_id)
