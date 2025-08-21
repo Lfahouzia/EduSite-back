@@ -5,6 +5,7 @@ import { logger } from "./shared/middlewares/logger";
 import authRoutes from "./features/auth/auth.routes";
 import roleRoutes from "./features/roles/role.routes";
 import permissionRoutes from "./features/permissions/permission.routes";
+import tutorsRoutes from "./features/tutor/tutor.routes";
 
 
 const app = express();
@@ -20,5 +21,7 @@ app.get("/health", (req: Request, res: Response) => {
 app.use("/api", authRoutes);
 app.use("/api", roleRoutes);
 app.use("/api/permissions", permissionRoutes);
+app.use("/api/tutors", tutorsRoutes);
+
 
 export default app;
