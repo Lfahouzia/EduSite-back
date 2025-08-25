@@ -24,6 +24,14 @@ export class CourseService {
     return this.courseRepository.update(id, data);
   }
 
+  async publishCourse(id: string) {
+    return this.courseRepository.publishCousrse(id);
+  }
+
+  async archiveCourse(id: string) {
+    return this.courseRepository.archiveCourse(id); 
+  }
+
 //   async deleteCourse(id: string) {
 //     return this.courseRepository.delete(id);
 //   }

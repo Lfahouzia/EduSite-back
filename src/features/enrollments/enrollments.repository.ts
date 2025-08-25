@@ -8,11 +8,11 @@ import {
 export class EnrollmentRepository {
   async create(data: CreateEnrollmentDTO): Promise<Enrollment> {
     const query = `
-      INSERT INTO enrollments (user_id, course_id)
-      VALUES ($1, $2)
+      INSERT INTO enrollments (user_id, course_id,feedback)
+      VALUES ($1, $2, $3)
       RETURNING *;
     `;
-    const result = await db.query(query, [data.user_id, data.course_id]);
+    const result = await db.query(query, [data.user_id, data.course_id, data.feedback || null]);
     return result.rows[0];
   }
 

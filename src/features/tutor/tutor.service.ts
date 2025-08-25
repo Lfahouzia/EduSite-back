@@ -1,5 +1,5 @@
 // src/modules/tutor/tutor.service.ts
-import { TutorRepository } from "./turo.repository"; 
+import { TutorRepository } from "./tutor.repository"; 
 import { TutorStatus, User, UserRole } from "./tutor.model";
 
 export class TutorService {

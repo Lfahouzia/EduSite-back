@@ -28,7 +28,7 @@ export class TutorController {
     const tutorRole: UserRole = role as UserRole;
 
     const tutors = await this.tutorService.listTutors(tutorRole);
-    return res.json({ data: tutors, message: "Tutors fetched successfully" });
+    return res.json({ data: tutors, message: "Lists fetched successfully" });
   }
 
   async updateTutorStatus(req: Request, res: Response) {

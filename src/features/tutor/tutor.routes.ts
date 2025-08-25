@@ -8,7 +8,12 @@ import { adminMiddleware } from "../../shared/middlewares/admin.middleware";
 const router = Router();
 const controller = new TutorController();
 
-router.get("/",authMiddleware,adminMiddleware,  controller.listTutors.bind(controller));
+router.get("/",
+  authMiddleware,
+  adminMiddleware,
+  
+  controller.listTutors.bind(controller));
+  
 router.put(
   "/status",
   authMiddleware,

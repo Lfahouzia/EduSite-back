@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { EnrollmentService } from "./enrollments.service";
 import { HTTP_STATUS } from "../../shared/config/httpStatus";
+import { getMissingFields } from "../../shared/utils/validators";
 
 export class EnrollmentController {
   private service: EnrollmentService;
@@ -10,13 +11,25 @@ export class EnrollmentController {
   }
 
   async create(req: Request, res: Response) {
+    const data = req.body;
+    const requiredFields = ["user_id", "course_id"];
+    const missingFields = getMissingFields(data, requiredFields);
+    if (missingFields.length > 0) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        error: "Missing required fields",
+        missingFields,
+      });
+    }
     try {
+        
       const enrollment = await this.service.create(req.body);
+     
+      
       return res.status(HTTP_STATUS.CREATED).json(enrollment);
-    } catch (err) {
+    } catch (err:any) {
       return res
         .status(HTTP_STATUS.INTERNAL_ERROR)
-        .json({ error: "Error creating enrollment" });
+        .json({ error: "Error creating enrollment", details: err.message });
     }
   }
 

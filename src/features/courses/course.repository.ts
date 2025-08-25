@@ -27,9 +27,23 @@ export class CourseRepository {
   }
 
   async findById(id: string): Promise<Course | null> {
-    const result = await pool.query("SELECT * FROM courses WHERE id = $1;", [
-      id,
-    ]);
+     const result = await pool.query(
+       `
+      SELECT 
+          c.*,
+          json_agg(jsonb_build_object(
+            'id', u.id,
+            'first_name', u.first_name,
+            'last_name', u.last_name
+          )) FILTER (WHERE u.id IS NOT NULL) AS students
+      FROM courses c
+      LEFT JOIN enrollments e ON c.id = e.course_id
+      LEFT JOIN users u ON e.user_id = u.id
+      WHERE c.id = $1
+      GROUP BY c.id;
+      `,
+       [id]
+     );
     return result.rows[0] || null;
   }
 
@@ -57,8 +71,35 @@ export class CourseRepository {
     return result.rows[0] || null;
   }
 
-//   async delete(id: string): Promise<boolean> {
-//     const result = await pool.query("DELETE FROM courses WHERE id = $1;", [id]);
-//     return (result.rowCount ?? 0) > 0;
-//   }
+  async publishCousrse(id: string): Promise<Course | null> {
+    const query = `
+      UPDATE courses
+      SET status = 'published',
+          published_date = NOW(),
+          updated_at = NOW()
+      WHERE id = $1
+      RETURNING *;
+    `;
+    const values = [id];
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
+  }
+
+  async archiveCourse(id: string): Promise<Course | null> {
+    const query = `
+      UPDATE courses
+      SET status = 'archived',
+          updated_at = NOW()
+      WHERE id = $1
+      RETURNING *;
+    `;
+    const values = [id];
+    const result = await pool.query(query, values);
+    return result.rows[0] || null;
+  }
+
+  //   async delete(id: string): Promise<boolean> {
+  //     const result = await pool.query("DELETE FROM courses WHERE id = $1;", [id]);
+  //     return (result.rowCount ?? 0) > 0;
+  //   }
 }
