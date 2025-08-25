@@ -56,6 +56,68 @@ const up = async () => {
           PRIMARY KEY (role_id, user_id)
       );
     `;
+
+  const userPermissions = `
+        CREATE TABLE IF NOT EXISTS user_permission (
+          user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+          permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,
+          PRIMARY KEY (user_id, permission_id)
+      );
+    
+  `;
+
+  const courses = `
+     CREATE TABLE IF NOT EXISTS courses (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        title VARCHAR(255) NOT NULL,
+        price DECIMAL(10, 2) NOT NULL,
+        description TEXT,
+        published_date TIMESTAMP,
+        certificate_texte VARCHAR(255) NULL,
+        status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+        created_at TIMESTAMP DEFAULT NOW(),
+        tutor_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        updated_at TIMESTAMP DEFAULT NOW()
+    );
+    `;
+  const groupMersssage = `
+      CREATE TABLE IF NOT EXISTS group_messages (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        topic TEXT NOT NULL,
+        course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `;
+
+  const messages = `
+     CREATE TABLE IF NOT EXISTS messages (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        content TEXT NOT NULL,
+        sent_at TIMESTAMP DEFAULT NOW(),
+        receiver_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
+        group_message_id UUID REFERENCES group_messages(id) ON DELETE CASCADE,
+        status VARCHAR(20) DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'read')),
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      );
+    `;
+
+    const enrollments = `
+    CREATE TABLE IF NOT EXISTS enrollments (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      enrollment_date TIMESTAMP DEFAULT NOW(),
+      average_score NUMERIC(5, 2),
+      status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'completed', 'dropped')),
+      feedback TEXT,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+      course_id UUID REFERENCES courses(id) ON DELETE CASCADE,
+      UNIQUE (user_id, course_id)
+    );
+  `;
   //Time execution
   console.time("Creating tables...");
 
@@ -64,7 +126,13 @@ const up = async () => {
   await db.query(users);
   await db.query(permissions);
   await db.query(rolesPermissions);
+  await db.query(userPermissions);
   await db.query(usersRoles);
+  await db.query(courses);
+  await db.query(groupMersssage);
+  await db.query(messages);
+  await db.query(enrollments);
+
 
   console.timeEnd("Ending creating tables...");
 };
