@@ -19,16 +19,129 @@ export class CourseRepository {
     return result.rows[0];
   }
 
-  async findAll(): Promise<Course[]> {
-    const result = await pool.query(
-      "SELECT * FROM courses ORDER BY created_at DESC;"
+  // async findAll(
+  //   page: number = 1,
+  //   limit: number = 10,
+  //   sort: string = "created_at",
+  //   order: "asc" | "desc" = "desc",
+  //   filters: { status?: string; tutorId?: string; title?: string } = {}
+  // ): Promise<{ data: Course[]; total: number }> {
+  //   const offset = (page - 1) * limit;
+  //   const values: any[] = [];
+  //   let whereClauses: string[] = [];
+
+  //   if (filters.status) {
+  //     values.push(filters.status);
+  //     whereClauses.push(`status = $${values.length}`);
+  //   }
+  //   if (filters.tutorId) {
+  //     values.push(filters.tutorId);
+  //     whereClauses.push(`tutor_id = $${values.length}`);
+  //   }
+  //   if (filters.title) {
+  //     values.push(`%${filters.title}%`);
+  //     whereClauses.push(`title ILIKE $${values.length}`);
+  //   }
+
+  //   const whereSQL =
+  //     whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+  //   // Count total for pagination
+  //   const countResult = await pool.query(
+  //     `SELECT COUNT(*) FROM courses ${whereSQL};`,
+  //     values
+  //   );
+  //   const total = parseInt(countResult.rows[0].count, 10);
+
+  //   // Data query
+  //   const result = await pool.query(
+  //     `
+  //     SELECT *
+  //     FROM courses
+  //     ${whereSQL}
+  //     ORDER BY ${sort} ${order}
+  //     LIMIT ${limit} OFFSET ${offset};
+  //     `,
+  //     values
+  //   );
+
+  //   return { data: result.rows, total };
+  // }
+  async findAll(
+    page: number = 1,
+    limit: number = 10,
+    sort: string = "c.created_at",
+    order: "asc" | "desc" = "desc",
+    filters: { status?: string; tutor_name?: string; title?: string } = {}
+  ): Promise<{ data: Course[]; total: number }> {
+    const offset = (page - 1) * limit;
+    const values: any[] = [];
+    let whereClauses: string[] = [];
+
+    // Filtre par statut du cours
+    if (filters.status) {
+      values.push(filters.status);
+      whereClauses.push(`c.status = $${values.length}`);
+    }
+
+    // Filtre par nom du tuteur
+    if (filters.tutor_name) {
+      values.push(`%${filters.tutor_name}%`);
+      whereClauses.push(
+        `(u.first_name || ' ' || u.last_name) ILIKE $${values.length}`
+      );
+    }
+
+    // Filtre par titre de cours
+    if (filters.title) {
+      values.push(`%${filters.title}%`);
+      whereClauses.push(`c.title ILIKE $${values.length}`);
+    }
+
+    const whereSQL =
+      whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+    // Count total for pagination
+    const countResult = await pool.query(
+      `
+      SELECT COUNT(*) 
+      FROM courses c
+      LEFT JOIN users u ON c.tutor_id = u.id
+      ${whereSQL};
+      `,
+      values
     );
-    return result.rows;
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    // Data query
+    const result = await pool.query(
+      `
+      SELECT 
+        c.id,
+        c.title,
+        c.price,
+        c.description,
+        c.published_date,
+        c.certificate_texte,
+        c.status,
+        c.created_at,
+        c.updated_at,
+        (u.first_name || ' ' || u.last_name) AS tutor_name
+      FROM courses c
+      LEFT JOIN users u ON c.tutor_id = u.id
+      ${whereSQL}
+      ORDER BY ${sort} ${order}
+      LIMIT ${limit} OFFSET ${offset};
+      `,
+      values
+    );
+
+    return { data: result.rows, total };
   }
 
   async findById(id: string): Promise<Course | null> {
-     const result = await pool.query(
-       `
+    const result = await pool.query(
+      `
       SELECT 
           c.*,
           json_agg(jsonb_build_object(
@@ -42,8 +155,8 @@ export class CourseRepository {
       WHERE c.id = $1
       GROUP BY c.id;
       `,
-       [id]
-     );
+      [id]
+    );
     return result.rows[0] || null;
   }
 

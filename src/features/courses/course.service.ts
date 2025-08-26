@@ -12,8 +12,14 @@ export class CourseService {
     return this.courseRepository.create(data);
   }
 
-  async listCourses() {
-    return this.courseRepository.findAll();
+  async listCourses(
+    page: number,
+    limit: number,
+    sort: string,
+    order: "asc" | "desc",
+    filters: { status?: string; tutor_name?: string; title?: string }
+  ) {
+    return this.courseRepository.findAll(page, limit, sort, order, filters);
   }
 
   async getCourseById(id: string) {
@@ -29,10 +35,10 @@ export class CourseService {
   }
 
   async archiveCourse(id: string) {
-    return this.courseRepository.archiveCourse(id); 
+    return this.courseRepository.archiveCourse(id);
   }
 
-//   async deleteCourse(id: string) {
-//     return this.courseRepository.delete(id);
-//   }
+  //   async deleteCourse(id: string) {
+  //     return this.courseRepository.delete(id);
+  //   }
 }

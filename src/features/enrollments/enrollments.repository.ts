@@ -61,10 +61,24 @@ export class EnrollmentRepository {
   }
 
   async listByCourse(courseId: string): Promise<Enrollment[]> {
-    const result = await db.query(
-      "SELECT * FROM enrollments WHERE course_id = $1",
-      [courseId]
-    );
+     const result = await db.query(
+       `
+      SELECT 
+        u.id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        e.status AS enrollment_status,
+        e.enrollment_date,
+        e.average_score,
+        e.feedback
+      FROM enrollments e
+      INNER JOIN users u ON e.user_id = u.id
+      WHERE e.course_id = $1
+      ORDER BY e.enrollment_date DESC;
+      `,
+       [courseId]
+     );
     return result.rows;
   }
 
@@ -74,5 +88,18 @@ export class EnrollmentRepository {
       [userId]
     );
     return result.rows;
+  }
+
+  async addFeedback(enrollmentId: string, feedback: string): Promise<Enrollment | null> {
+    const query = `
+      UPDATE enrollments
+      SET feedback = $1,
+          updated_at = NOW()
+      WHERE id = $2
+      RETURNING *;
+    `;
+    const values = [feedback, enrollmentId];
+    const result = await db.query(query, values);
+    return result.rows[0] || null;
   }
 }

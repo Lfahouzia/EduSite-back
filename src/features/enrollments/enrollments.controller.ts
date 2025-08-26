@@ -21,12 +21,10 @@ export class EnrollmentController {
       });
     }
     try {
-        
       const enrollment = await this.service.create(req.body);
-     
-      
+
       return res.status(HTTP_STATUS.CREATED).json(enrollment);
-    } catch (err:any) {
+    } catch (err: any) {
       return res
         .status(HTTP_STATUS.INTERNAL_ERROR)
         .json({ error: "Error creating enrollment", details: err.message });
@@ -66,6 +64,8 @@ export class EnrollmentController {
   }
 
   async listByCourse(req: Request, res: Response) {
+    console.log("Course ID:", req.params.courseId); // Debug log
+
     const enrollments = await this.service.listByCourse(req.params.courseId);
     return res.json(enrollments);
   }
@@ -73,5 +73,42 @@ export class EnrollmentController {
   async listByUser(req: Request, res: Response) {
     const enrollments = await this.service.listByUser(req.params.userId);
     return res.json(enrollments);
+  }
+
+  async addFeedback(req: Request, res: Response) {
+    const { id } = req.params;
+
+    const data = req.body;
+    const requiredFields = ["feed_back"];
+    const missingFields = getMissingFields(data, requiredFields);
+    if (missingFields.length > 0) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        error: "Missing required fields",
+        missingFields,
+      });
+    }
+    const { feed_back } = req.body;
+    if (id === undefined) {
+      return res
+        .status(HTTP_STATUS.BAD_REQUEST)
+        .json({ error: "Enrollment ID is required" });
+    }
+
+    try {
+      const updatedEnrollment = await this.service.addFeedback(
+        id,
+        feed_back
+      );
+      return res.json(updatedEnrollment);
+    } catch (err: any) {
+      if (err.message === "Enrollment not found") {
+        return res
+          .status(HTTP_STATUS.NOT_FOUND)
+          .json({ error: "Enrollment not found" });
+      }
+      return res
+        .status(HTTP_STATUS.INTERNAL_ERROR)
+        .json({ error: "Error adding feedback", details: err.message });
+    }
   }
 }

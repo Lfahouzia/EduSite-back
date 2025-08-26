@@ -35,4 +35,13 @@ export class EnrollmentService {
   listByUser(userId: string) {
     return this.repo.listByUser(userId);
   }
+
+  async addFeedback(enrollmentId: string, feedback: string) {
+    const enrollment = await this.repo.getById(enrollmentId);
+    if (!enrollment) {
+      throw new Error("Enrollment not found");
+    }
+    const updatedEnrollment = await this.repo.addFeedback(enrollmentId, feedback );
+    return updatedEnrollment;
+  }
 }
