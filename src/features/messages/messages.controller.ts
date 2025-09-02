@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { MessageService } from "./messages.service";
 import { HTTP_STATUS } from "../../shared/config/httpStatus";
+import { getMissingFields } from "../../shared/utils/validators";
 
 export class MessageController {
   private service: MessageService;
@@ -10,8 +11,24 @@ export class MessageController {
   }
 
   async create(req: Request, res: Response) {
+    const requiredFields = ["content", "receiver_id","group_message_id"];
+    const missingFields = getMissingFields(req.body, requiredFields);
+    if (missingFields.length > 0) {
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
+        error: "Missing required fields",
+        missingFields,
+      });
+    }
     try {
+      const sender_id = req.user?.id;
+      req.body.sender_id = sender_id;
+      if (!sender_id) {
+        return res
+          .status(HTTP_STATUS.UNAUTHORIZED)
+          .json({ error: "User not authenticated" });
+      }
       const message = await this.service.create(req.body);
+
       return res.status(HTTP_STATUS.CREATED).json(message);
     } catch (err) {
       return res

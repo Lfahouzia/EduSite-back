@@ -97,7 +97,7 @@ const up = async () => {
         sent_at TIMESTAMP DEFAULT NOW(),
         receiver_id UUID REFERENCES users(id) ON DELETE CASCADE,
         sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
-        group_message_id UUID REFERENCES group_messages(id) ON DELETE CASCADE,
+        group_message_id UUID REFERENCES group_messages(id),
         status VARCHAR(20) DEFAULT 'sent' CHECK (status IN ('sent', 'delivered', 'read')),
         created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
